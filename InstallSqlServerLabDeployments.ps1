@@ -72,6 +72,7 @@ $sqlInstalls = @(
         databaseName="AdventureWorks2019";
         registryKey="HKLM:\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL15.SQL2019";
         sqlVersion="2019";
+        argumentList = "/qs /ACTION=INSTALL /FEATURES=SQL /INSTANCENAME=SQL2019 /SQLSVCACCOUNT=`"$ComputerName\$SqlServiceAccountName`" /SQLSVCPASSWORD=`"$SqlServiceAccountPassword`" /SQLSYSADMINACCOUNTS=`"$ComputerName\$UserAccountName`" /AGTSVCACCOUNT=`"NT AUTHORITY\Network Service`" /SQLSVCINSTANTFILEINIT=`"True`" /SECURITYMODE=SQL /SAPWD=`"$SqlServiceAccountPassword`" /IACCEPTSQLSERVERLICENSETERMS";
     }
     @{
         isoUrl="https://sqlmigrationtraining.blob.core.windows.net/iso/en_sql_server_2012_developer_edition_with_service_pack_4_x64_dvd.iso";
@@ -83,6 +84,7 @@ $sqlInstalls = @(
         databaseName="AdventureWorks2012";
         registryKey="HKLM:\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL11.SQL2012";
         sqlVersion="2012 SP4";
+        argumentList = "/qs /ACTION=INSTALL /FEATURES=SQL /INSTANCENAME=SQL2012 /SQLSVCACCOUNT=`"$ComputerName\$SqlServiceAccountName`" /SQLSVCPASSWORD=`"$SqlServiceAccountPassword`" /SQLSYSADMINACCOUNTS=`"$ComputerName\$UserAccountName`" /AGTSVCACCOUNT=`"NT AUTHORITY\Network Service`" /SECURITYMODE=SQL /SAPWD=`"$SqlServiceAccountPassword`" /IACCEPTSQLSERVERLICENSETERMS";
     }
     @{
         isoUrl="https://sqlmigrationtraining.blob.core.windows.net/iso/enu_sql_server_2016_developer_edition_with_service_pack_3_x64_dvd.iso";
@@ -94,6 +96,7 @@ $sqlInstalls = @(
         databaseName="AdventureWorks2016";
         registryKey="HKLM:\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL13.SQL2016";
         sqlVersion="2016 SP3";
+        argumentList = "/qs /ACTION=INSTALL /FEATURES=SQL /INSTANCENAME=SQL2016 /SQLSVCACCOUNT=`"$ComputerName\$SqlServiceAccountName`" /SQLSVCPASSWORD=`"$SqlServiceAccountPassword`" /SQLSYSADMINACCOUNTS=`"$ComputerName\$UserAccountName`" /AGTSVCACCOUNT=`"NT AUTHORITY\Network Service`" /SQLSVCINSTANTFILEINIT=`"True`" /SECURITYMODE=SQL /SAPWD=`"$SqlServiceAccountPassword`" /IACCEPTSQLSERVERLICENSETERMS";
     }
 )
 
@@ -244,10 +247,11 @@ foreach($sql in $sqlInstalls){
         $SetupPath = $sql.extractPath + "\setup.exe"
         # Silent install options, Set instance name, use created sql service account, add templated user to Sys Admin, use network service for SQL Agent, 
         # Use instant file initialization, turn on SQL Auth with the service account password, accept the license
-        $ArgumentList = "/qs /ACTION=INSTALL /FEATURES=SQL /INSTANCENAME=$($sql.instanceName) /SQLSVCACCOUNT=`"$ComputerName\$SqlServiceAccountName`" /SQLSVCPASSWORD=`"$SqlServiceAccountPassword`" /SQLSYSADMINACCOUNTS=`"$ComputerName\$UserAccountName`" /AGTSVCACCOUNT=`"NT AUTHORITY\Network Service`" /SQLSVCINSTANTFILEINIT=`"True`" /SECURITYMODE=SQL /SAPWD=`"$SqlServiceAccountPassword`" /IACCEPTSQLSERVERLICENSETERMS"
+
+        # Now moved to individual properties as instant files aren't supported in 2012
         if(-not(Test-Path $sql.registryKey)) {
-            Log-Info("Starting SQL Installation with arguments $ArgumentList")
-            Start-Process -FilePath $SetupPath -ArgumentList $ArgumentList -Wait
+            Log-Info("Starting SQL Installation with arguments $($sql.argumentList)")
+            Start-Process -FilePath $SetupPath -ArgumentList $sql.argumentList -Wait
             Log-Success("SQL Instance $($sql.instanceName) successfully installed")
         } else {
             Log-Info("SQL $($sql.sqlVersion) already installed at instance $($sql.instanceName)")
