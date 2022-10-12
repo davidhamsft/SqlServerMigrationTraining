@@ -72,7 +72,7 @@ function Log-Error([string] $OutputText)
 }
 #endregion
 
-$sqlInstalls = [
+$sqlInstalls = @(
     @{
         isoUrl="https://sqlmigrationtraining.blob.core.windows.net/iso/en_sql_server_2019_developer_x64_dvd.iso",
         extractPath="C:\SQL2019Install\",
@@ -83,7 +83,7 @@ $sqlInstalls = [
         databaseName="AdventureWorks2019",
         registryKey="HKLM:\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL15.SQL2019",
         sqlVersion="2019"
-    },
+    }
     @{
         isoUrl="https://sqlmigrationtraining.blob.core.windows.net/iso/en_sql_server_2012_developer_edition_with_service_pack_4_x64_dvd.iso",
         extractPath="C:\SQL2012Install\",
@@ -94,7 +94,7 @@ $sqlInstalls = [
         databaseName="AdventureWorks2012",
         registryKey="HKLM:\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL11.SQL2012",
         sqlVersion="2012 SP4"
-    },
+    }
     @{
         isoUrl="https://sqlmigrationtraining.blob.core.windows.net/iso/enu_sql_server_2016_developer_edition_with_service_pack_3_x64_dvd.iso",
         extractPath="C:\SQL2016Install\",
@@ -105,8 +105,8 @@ $sqlInstalls = [
         databaseName="AdventureWorks2016",
         registryKey="HKLM:\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL13.SQL2016",
         sqlVersion="2016 SP3"
-    },
-]
+    }
+)
 
 $scriptPath = $MyInvocation.MyCommand.Path
 
