@@ -60,7 +60,7 @@ function Log-Error([string] $OutputText)
 }
 #endregion
 
-# Full information needed for the installations, make sure to not have a trailing slash on extractPath (This was a false alarm)
+# Full information needed for the installations, make sure to not have a trailing slash on extractPath
 $sqlInstalls = @(
     @{
         isoUrl="https://sqlmigrationtraining.blob.core.windows.net/iso/en_sql_server_2019_developer_x64_dvd.iso";
@@ -164,7 +164,9 @@ else {
 
 try {
     Log-Info("Step 2.3: Checking if the account $SqlServiceAccountName is part of the Administrators local group")
-    if($members -contains $SqlServiceAccountName) {
+    $members = Get-LocalGroupMember -Group "Administrators"
+    ($adusers_list | Select -Expand samaccountname) -contains $target_aduser.samaccountname
+    if(($members| Select -Expand Name) -contains "$ComputerName\$SqlServiceAccountName") {
         Log-Info("Local SQL Server Service account $SqlServiceAccountName is already part of the Administrators group.")
     } else {
         Log-Info("Step 2.4: Adding account $SqlServiceAccountName to the Administrators local group")
@@ -218,7 +220,6 @@ foreach($sql in $sqlInstalls){
             $isoMount = Mount-DiskImage $sql.downloadPath
             $isoDriveLetter = $(Get-Volume -DiskImage $isoMount).DriveLetter
 
-            # This will fail if the directory already exists, with the check for setup.exe it shouldn't get here if the directory is there though
             Log-Info("Moving the installer bits to $($sql.extractPath)")
             Copy-Item -Path "${isoDriveLetter}:\" -Destination $sql.extractPath -Recurse -Force
 
@@ -270,8 +271,10 @@ foreach($sql in $sqlInstalls){
         Log-Info("Checking if database $($sql.databaseName) exists on instance")
         $SqlQuery = "SELECT count(*) FROM sys.databases WHERE name = '$($sql.databaseName)'"
         $SqlConnection = New-Object System.Data.SqlClient.SqlConnection 
-        $SqlConnection.ConnectionString = "Server = .\$($sql.instanceName); Database = master;Integrated Security=False;User Id=sa;Password=$SqlServiceAccountPassword;"
-        $SqlCmd = New-Object System.Data.SqlClient.SqlCommand $SqlCmd.CommandText = $SqlQuery $SqlCmd.Connection = $SqlConnection
+        $SqlConnection.ConnectionString = "Server=.\$($sql.instanceName);Database=master;Integrated Security=False;User Id=sa;Password=$SqlServiceAccountPassword;"
+        $SqlCmd = New-Object System.Data.SqlClient.SqlCommand 
+        $SqlCmd.CommandText = $SqlQuery 
+        $SqlCmd.Connection = $SqlConnection
         $SqlConnection.Open() 
         $Rows= [Int32]$SqlCmd.ExecuteScalar()
         $SqlConnection.Close()
@@ -308,8 +311,10 @@ foreach($sql in $sqlInstalls){
         if($Tcp.IsEnabled) {
             Log-Info("TCP/IP is already enabled for SQL Instance $($sql.instanceName)")
         } else {
+            Log-Info("Enabling TCP/IP for SQL Instance $($sql.instanceName)")
             $Tcp.IsEnabled = $true  
             $Tcp.Alter()
+            Log-Success("TCP/IP has been enabled for SQL Instance $($sql.instanceName)")
         }  
     }
     catch {
@@ -318,6 +323,7 @@ foreach($sql in $sqlInstalls){
         Log-Error("Terminating Script!")
         Exit
     }
+    $stepCounter++
 }
 
 Unregister-ScheduledTask -TaskName "ReRunSQLInstallProcess" -Confirm:$false
