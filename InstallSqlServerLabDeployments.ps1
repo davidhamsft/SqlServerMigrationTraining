@@ -1,5 +1,7 @@
 param ($ComputerName, $UserAccountName, $SqlServiceAccountName, $SqlServiceAccountPassword)
 
+$InstallerLog = ".\InstallLog.txt"
+
 function MakeDirectoryIfNotExists($DirectoryPath) {
     if (Test-Path $DirectoryPath) {
    
@@ -9,20 +11,6 @@ function MakeDirectoryIfNotExists($DirectoryPath) {
     {
         New-Item $DirectoryPath -ItemType Directory
         Write-Host "Folder $DirectoryPath Created successfully"
-    }
-}
-
-# Modified from https://morgantechspace.com/2017/10/check-if-user-is-member-of-local-group-powershell.html
-function IsUserInGroup($user, $group) {
-    $groupObj =[ADSI]"WinNT://./$group,group" 
-    $membersObj = @($groupObj.psbase.Invoke("Members")) 
-
-    $members = ($membersObj | foreach {$_.GetType().InvokeMember("Name", 'GetProperty', $null, $_, $null)})
-
-    If ($members -contains $user) {
-        return $true
-    } Else {
-        return $false
     }
 }
 
@@ -72,39 +60,40 @@ function Log-Error([string] $OutputText)
 }
 #endregion
 
+# Full information needed for the installations, make sure to not have a trailing slash on extractPath (This was a false alarm)
 $sqlInstalls = @(
     @{
-        isoUrl="https://sqlmigrationtraining.blob.core.windows.net/iso/en_sql_server_2019_developer_x64_dvd.iso",
-        extractPath="C:\SQL2019Install\",
-        downloadPath="C:\ISOs\en_sql_server_2019_developer_x64_dvd.iso",
-        instanceName="SQL2019",
-        backupUrl="https://github.com/Microsoft/sql-server-samples/releases/download/adventureworks/AdventureWorks2019.bak",
-        backupPath="C:\Backups\AdventureWorks2019.bak",
-        databaseName="AdventureWorks2019",
-        registryKey="HKLM:\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL15.SQL2019",
-        sqlVersion="2019"
+        isoUrl="https://sqlmigrationtraining.blob.core.windows.net/iso/en_sql_server_2019_developer_x64_dvd.iso";
+        extractPath="C:\SQL2019Install";
+        downloadPath="C:\ISOs\en_sql_server_2019_developer_x64_dvd.iso";
+        instanceName="SQL2019";
+        backupUrl="https://github.com/Microsoft/sql-server-samples/releases/download/adventureworks/AdventureWorks2019.bak";
+        backupPath="C:\Backups\AdventureWorks2019.bak";
+        databaseName="AdventureWorks2019";
+        registryKey="HKLM:\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL15.SQL2019";
+        sqlVersion="2019";
     }
     @{
-        isoUrl="https://sqlmigrationtraining.blob.core.windows.net/iso/en_sql_server_2012_developer_edition_with_service_pack_4_x64_dvd.iso",
-        extractPath="C:\SQL2012Install\",
-        downloadPath="C:\ISOs\en_sql_server_2012_developer_edition_with_service_pack_4_x64_dvd.iso",
-        instanceName="SQL2012",
-        backupUrl="https://github.com/Microsoft/sql-server-samples/releases/download/adventureworks/AdventureWorks2012.bak",
-        backupPath="C:\Backups\AdventureWorks2012.bak",
-        databaseName="AdventureWorks2012",
-        registryKey="HKLM:\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL11.SQL2012",
-        sqlVersion="2012 SP4"
+        isoUrl="https://sqlmigrationtraining.blob.core.windows.net/iso/en_sql_server_2012_developer_edition_with_service_pack_4_x64_dvd.iso";
+        extractPath="C:\SQL2012Install";
+        downloadPath="C:\ISOs\en_sql_server_2012_developer_edition_with_service_pack_4_x64_dvd.iso";
+        instanceName="SQL2012";
+        backupUrl="https://github.com/Microsoft/sql-server-samples/releases/download/adventureworks/AdventureWorks2012.bak";
+        backupPath="C:\Backups\AdventureWorks2012.bak";
+        databaseName="AdventureWorks2012";
+        registryKey="HKLM:\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL11.SQL2012";
+        sqlVersion="2012 SP4";
     }
     @{
-        isoUrl="https://sqlmigrationtraining.blob.core.windows.net/iso/enu_sql_server_2016_developer_edition_with_service_pack_3_x64_dvd.iso",
-        extractPath="C:\SQL2016Install\",
-        downloadPath="C:\ISOs\enu_sql_server_2016_developer_edition_with_service_pack_3_x64_dvd.iso",
-        instanceName="SQL2016",
-        backupUrl="https://github.com/Microsoft/sql-server-samples/releases/download/adventureworks/AdventureWorks2016.bak",
-        backupPath="C:\Backups\AdventureWorks2016.bak",
-        databaseName="AdventureWorks2016",
-        registryKey="HKLM:\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL13.SQL2016",
-        sqlVersion="2016 SP3"
+        isoUrl="https://sqlmigrationtraining.blob.core.windows.net/iso/enu_sql_server_2016_developer_edition_with_service_pack_3_x64_dvd.iso";
+        extractPath="C:\SQL2016Install";
+        downloadPath="C:\ISOs\enu_sql_server_2016_developer_edition_with_service_pack_3_x64_dvd.iso";
+        instanceName="SQL2016";
+        backupUrl="https://github.com/Microsoft/sql-server-samples/releases/download/adventureworks/AdventureWorks2016.bak";
+        backupPath="C:\Backups\AdventureWorks2016.bak";
+        databaseName="AdventureWorks2016";
+        registryKey="HKLM:\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL13.SQL2016";
+        sqlVersion="2016 SP3";
     }
 )
 
@@ -175,7 +164,7 @@ else {
 
 try {
     Log-Info("Step 2.3: Checking if the account $SqlServiceAccountName is part of the Administrators local group")
-    if(IsUserInGroup($SqlServiceAccountName, "Administrators")) {
+    if($members -contains $SqlServiceAccountName) {
         Log-Info("Local SQL Server Service account $SqlServiceAccountName is already part of the Administrators group.")
     } else {
         Log-Info("Step 2.4: Adding account $SqlServiceAccountName to the Administrators local group")
@@ -195,7 +184,7 @@ $stepCounter = 3
 
 foreach($sql in $sqlInstalls){
     $subStepCounter = 1
-    Log-InfoHighLight("Step $stepCounter: Beginning creation of SQL Instance $($sql.instanceName) running SQL Version $($sql.sqlVersion).")
+    Log-InfoHighLight("Step ${stepCounter}: Beginning creation of SQL Instance $($sql.instanceName) running SQL Version $($sql.sqlVersion).")
     $subStepCounter++
     try {
         if(-not(Test-Path $sql.downloadPath -PathType Leaf)) {
@@ -222,21 +211,26 @@ foreach($sql in $sqlInstalls){
     }
 
     try {
-        Log-InfoHighlight("Step $stepCounter.$subStepCounter: Mounting the iso image $($sql.downloadPath) and extracting the data to $($sql.extractPath)")
+        Log-InfoHighlight("Step $stepCounter.${subStepCounter}: Mounting the iso image $($sql.downloadPath) and extracting the data to $($sql.extractPath)")
         $subStepCounter++
-        Log-Info("Mounting the iso image $($sql.downloadPath)")
-        $isoMount = Mount-DiskImage $sql.downloadPath
-        $isoDriveLetter = $(Get-Volume -DiskImage $isoMount).DriveLetter
+        if(-not(Test-Path $($sql.extractPath + "\setup.exe") -PathType Leaf)) {
+            Log-Info("Mounting the iso image $($sql.downloadPath)")
+            $isoMount = Mount-DiskImage $sql.downloadPath
+            $isoDriveLetter = $(Get-Volume -DiskImage $isoMount).DriveLetter
 
-        Log-Info("Moving the installer bits to $($sql.extractPath)")
-        MakeDirectoryIfNotExists($sql.extractPath)
-        Copy-Item -Path "$isoDriveLetter:\" -Destination $sql.extractPath -Recurse -Force
+            # This will fail if the directory already exists, with the check for setup.exe it shouldn't get here if the directory is there though
+            Log-Info("Moving the installer bits to $($sql.extractPath)")
+            Copy-Item -Path "${isoDriveLetter}:\" -Destination $sql.extractPath -Recurse -Force
 
-        Log-Info("Dismounting the iso image $($sql.downloadPath)")
-        DisMount-DiskImage $sql.downloadPath
-        Log-Success("Installer bits successfully extracted to $($sql.extractPath)")
+            Log-Info("Dismounting the iso image $($sql.downloadPath)")
+            DisMount-DiskImage $sql.downloadPath
+            Log-Success("Installer bits successfully extracted to $($sql.extractPath)")
+        } else {
+            Log-Info("setup.exe already exists at $($sql.extractPath), assuming we've already extracted the ISO")
+        }
     }
     catch {
+        DisMount-DiskImage $sql.downloadPath -ErrorAction SilentlyContinue
         Log-Error("Mounting or extracting the ISO disk image $($sql.downloadPath) has failed.")
         Log-Error($_)
         Log-Error("Terminating Script!")
@@ -244,15 +238,15 @@ foreach($sql in $sqlInstalls){
     }
 
     try {
-        Log-InfoHighLight("Step $stepCounter.$subStepCounter: Beginning SQL install of $($sql.sqlVersion)")
+        Log-InfoHighLight("Step $stepCounter.${subStepCounter}: Beginning SQL install of $($sql.sqlVersion)")
         # Path we copied the setup bits to for SQL
-        $SetupPath = $sql.extractPath + "setup.exe"
+        $SetupPath = $sql.extractPath + "\setup.exe"
         # Silent install options, Set instance name, use created sql service account, add templated user to Sys Admin, use network service for SQL Agent, 
         # Use instant file initialization, turn on SQL Auth with the service account password, accept the license
         $ArgumentList = "/qs /ACTION=INSTALL /FEATURES=SQL /INSTANCENAME=$($sql.instanceName) /SQLSVCACCOUNT=`"$ComputerName\$SqlServiceAccountName`" /SQLSVCPASSWORD=`"$SqlServiceAccountPassword`" /SQLSYSADMINACCOUNTS=`"$ComputerName\$UserAccountName`" /AGTSVCACCOUNT=`"NT AUTHORITY\Network Service`" /SQLSVCINSTANTFILEINIT=`"True`" /SECURITYMODE=SQL /SAPWD=`"$SqlServiceAccountPassword`" /IACCEPTSQLSERVERLICENSETERMS"
         if(-not(Test-Path $sql.registryKey)) {
             Log-Info("Starting SQL Installation with arguments $ArgumentList")
-            Start-Process -FilePath $SetupPath -ArgumentList $ArgumentList
+            Start-Process -FilePath $SetupPath -ArgumentList $ArgumentList -Wait
             Log-Success("SQL Instance $($sql.instanceName) successfully installed")
         } else {
             Log-Info("SQL $($sql.sqlVersion) already installed at instance $($sql.instanceName)")
@@ -269,7 +263,7 @@ foreach($sql in $sqlInstalls){
     # We install 2019 first to allow make sure we have SQLCMD in an expected folder
     # Check if the database exists, if it does, do nothing, otherwise restore the backup
     try {
-        Log-InfoHighLight("Step $stepCounter.$subStepCounter: Starting Database restoration of $($sql.databaseName) into SQL Instance $($sql.instanceName)")
+        Log-InfoHighLight("Step $stepCounter.${subStepCounter}: Starting Database restoration of $($sql.databaseName) into SQL Instance $($sql.instanceName)")
         $subStepCounter++
         # Query to check if the database exists on the SQL Instance per example:
         # https://stackoverflow.com/a/25054312 
@@ -285,7 +279,7 @@ foreach($sql in $sqlInstalls){
         if($Rows -eq 0) {
             Log-Info("Starting restoration of $($sql.databaseName) on instance.")
             $SqlCmdArguments = "-S $ComputerName\$($sql.instanceName) -U sa -P $SqlServiceAccountPassword -Q `"RESTORE DATABASE [$($sql.databaseName)] FROM DISK='$($sql.backupPath)'`""
-            Start-Process -FilePath "C:\Program Files\Microsoft SQL Server\Client SDK\ODBC\170\Tools\Binn\SQLCMD.EXE" -ArgumentList $SqlCmdArguments
+            Start-Process -FilePath "C:\Program Files\Microsoft SQL Server\Client SDK\ODBC\170\Tools\Binn\SQLCMD.EXE" -ArgumentList $SqlCmdArguments -Wait
             Log-Success("Database $($sql.databaseName) successfully restored on instance.")
         } else {
             Log-Info("Database $($sql.databaseName) already exists on instance.")
@@ -299,7 +293,7 @@ foreach($sql in $sqlInstalls){
     }
 
     try {
-        Log-InfoHighLight("Step $stepCounter.$subStepCounter: Enabling TCP/IP Protocol for SQL Instance $($sql.instanceName)")
+        Log-InfoHighLight("Step $stepCounter.${subStepCounter}: Enabling TCP/IP Protocol for SQL Instance $($sql.instanceName)")
         $subStepCounter++
         # Enabling TCP/IP protocol for the SQL Server as per https://learn.microsoft.com/en-us/sql/database-engine/configure-windows/enable-or-disable-a-server-network-protocol?view=sql-server-2017#to-enable-a-server-network-protocol-using-powershell
         Log-Info("Importing sqlps module to interact with WMI")
