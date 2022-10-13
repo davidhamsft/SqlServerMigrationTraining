@@ -132,7 +132,7 @@ try {
         }
 
         Log-Info("Running SSMS installer to add SSMS and Azure Data Studio")
-        Start-Process -FilePath $ssmsLocalPath -ArgumentList "/install /passive /norestart"
+        Start-Process -FilePath $ssmsLocalPath -ArgumentList "/install /passive /norestart" -Wait
         Log-Success("SSMS and Azure Data Studio successfully installed!")
     } else {
         Log-Info("SSMS Is already installed, continuing script")
@@ -304,7 +304,7 @@ foreach($sql in $sqlInstalls){
         $subStepCounter++
         # Enabling TCP/IP protocol for the SQL Server as per https://learn.microsoft.com/en-us/sql/database-engine/configure-windows/enable-or-disable-a-server-network-protocol?view=sql-server-2017#to-enable-a-server-network-protocol-using-powershell
         Log-Info("Importing sqlps module to interact with WMI")
-        Import-Module "sqlps"
+        import-module -name "C:\Program Files (x86)\Microsoft SQL Server\150\Tools\PowerShell\Modules\SQLPS"
         $smo = 'Microsoft.SqlServer.Management.Smo.'  
         $wmi = new-object ($smo + 'Wmi.ManagedComputer')
 
