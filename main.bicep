@@ -1,3 +1,10 @@
+@description('Enter a resource group name.')
+param rgName string = 'SQLMigrationLab'
+
+@description('Choose a location')
+@allowed(loadJsonContent('azure-bicep-locations/locations.json', '$.[*].name'))
+param location string
+
 @description('Enter SQL Migration Lab VM Name.')
 param vmName string
 
@@ -22,9 +29,6 @@ param administratorLoginPassword string
 
 @description('The name of the Storage Account')
 param storageAccountName string = 'store${uniqueString(resourceGroup().id)}'
-
-@description('Enter location. If you leave this field blank resource group location would be used.')
-param location string = resourceGroup().location
 
 @description('Enter virtual network name. If you leave this field blank name will be created by the template.')
 param virtualNetworkName string = 'SQLMigrationLab-vNet'
