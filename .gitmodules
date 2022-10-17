@@ -1,0 +1,3 @@
+[submodule "azure-bicep-locations"]
+	path = azure-bicep-locations
+	url = https://github.com/cbattlegear/azure-bicep-locations.git
