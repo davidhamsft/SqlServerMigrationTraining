@@ -15,48 +15,42 @@ function MakeDirectoryIfNotExists($DirectoryPath) {
 }
 
 #region - These routines writes the output string to the console and also to the log file.
-# Taken directly from teh AzureMigrateInstaller script
-function Log-Info([string] $OutputText)
-{
-    Write-Host $OutputText -ForegroundColor White
+# Originally taken from AzureMigration.ps1, now heavily modified due to Nick's need to complain
+# about the code being formatted a specific way instead of looking at the functionality of the 
+# important items that are running. But as you see now we have a very in depth case statement 
+# across three concepts of info, infohighlight, and error. 
+# Just to make it a bit more frustrating though I am going to have one log function, that these three
+# functions call with a different parameter each.
+enum LogLevel {
+    info
+    infohighlight
+    error
+}
+function Log([LogLevel] $level, [string] $OutputText) {
+    $TextColor = "White"
+    switch($level) {
+        [LogLevel]::info {$TextColor = "White"}
+        [LogLevel]::infohighlight {$TextColor = "Cyan"}
+        [LogLevel]::error {$TextColor = "Red"}
+    }
+    Write-Host $OutputText -ForegroundColor $TextColor
     $OutputText = [string][DateTime]::Now + " " + $OutputText
     $OutputText | %{ Out-File -filepath $InstallerLog -inputobject $_ -append -encoding "ASCII" }
+}
+
+function Log-Info([string] $OutputText)
+{
+    Log([LogLevel]::info, $OutputText)
 }
 
 function Log-InfoHighLight([string] $OutputText)
 {
-    Write-Host $OutputText -ForegroundColor Cyan
-    $OutputText = [string][DateTime]::Now + " " + $OutputText
-    $OutputText | %{ Out-File -filepath $InstallerLog -inputobject $_ -append -encoding "ASCII" }
-}
-
-function Log-Input([string] $OutputText)
-{
-    Write-Host $OutputText -ForegroundColor White -BackgroundColor DarkGray -NoNewline
-    $OutputText = [string][DateTime]::Now + " " + $OutputText
-    $OutputText | %{ Out-File -filepath $InstallerLog -inputobject $_ -append -encoding "ASCII" }
-    Write-Host " " -NoNewline
-}
-
-function Log-Success([string] $OutputText)
-{
-    Write-Host $OutputText -ForegroundColor Green
-    $OutputText = [string][DateTime]::Now + " " + $OutputText
-    $OutputText | %{ Out-File -filepath $InstallerLog -inputobject $_ -append -encoding "ASCII" }
-}
-
-function Log-Warning([string] $OutputText)
-{
-    Write-Host $OutputText -ForegroundColor Yellow
-    $OutputText = [string][DateTime]::Now + " " + $OutputText
-    $OutputText | %{ Out-File -filepath $InstallerLog -inputobject $_ -append -encoding "ASCII"  }
+    Log([LogLevel]::infohightlight, $OutputText)
 }
 
 function Log-Error([string] $OutputText)
 {
-    Write-Host $OutputText -ForegroundColor Red
-    $OutputText = [string][DateTime]::Now + " " + $OutputText
-    $OutputText | %{ Out-File -filepath $InstallerLog -inputobject $_ -append -encoding "ASCII" }
+    Log([LogLevel]::error, $OutputText)
 }
 #endregion
 
@@ -72,7 +66,7 @@ $sqlInstalls = @(
         databaseName="AdventureWorks2019";
         registryKey="HKLM:\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL15.SQL2019";
         sqlVersion="2019";
-        argumentList = "/qs /ACTION=INSTALL /FEATURES=SQL /INSTANCENAME=SQL2019 /SQLSVCACCOUNT=`"$ComputerName\$SqlServiceAccountName`" /SQLSVCPASSWORD=`"$SqlServiceAccountPassword`" /SQLSYSADMINACCOUNTS=`"$ComputerName\$UserAccountName`" /AGTSVCACCOUNT=`"NT AUTHORITY\Network Service`" /SQLSVCINSTANTFILEINIT=`"True`" /SECURITYMODE=SQL /SAPWD=`"$SqlServiceAccountPassword`" /IACCEPTSQLSERVERLICENSETERMS";
+        argumentList = "/q /ACTION=INSTALL /FEATURES=SQL /INSTANCENAME=SQL2019 /SQLSVCACCOUNT=`"$ComputerName\$SqlServiceAccountName`" /SQLSVCPASSWORD=`"$SqlServiceAccountPassword`" /SQLSYSADMINACCOUNTS=`"$ComputerName\$UserAccountName`" /AGTSVCACCOUNT=`"NT AUTHORITY\Network Service`" /SQLSVCINSTANTFILEINIT=`"True`" /SECURITYMODE=SQL /SAPWD=`"$SqlServiceAccountPassword`" /IACCEPTSQLSERVERLICENSETERMS";
     }
     @{
         isoUrl="https://sqlmigrationtraining.blob.core.windows.net/iso/en_sql_server_2012_developer_edition_with_service_pack_4_x64_dvd.iso";
@@ -84,7 +78,7 @@ $sqlInstalls = @(
         databaseName="AdventureWorks2012";
         registryKey="HKLM:\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL11.SQL2012";
         sqlVersion="2012 SP4";
-        argumentList = "/qs /ACTION=INSTALL /FEATURES=SQL /INSTANCENAME=SQL2012 /SQLSVCACCOUNT=`"$ComputerName\$SqlServiceAccountName`" /SQLSVCPASSWORD=`"$SqlServiceAccountPassword`" /SQLSYSADMINACCOUNTS=`"$ComputerName\$UserAccountName`" /AGTSVCACCOUNT=`"NT AUTHORITY\Network Service`" /SECURITYMODE=SQL /SAPWD=`"$SqlServiceAccountPassword`" /IACCEPTSQLSERVERLICENSETERMS";
+        argumentList = "/q /ACTION=INSTALL /FEATURES=SQL /INSTANCENAME=SQL2012 /SQLSVCACCOUNT=`"$ComputerName\$SqlServiceAccountName`" /SQLSVCPASSWORD=`"$SqlServiceAccountPassword`" /SQLSYSADMINACCOUNTS=`"$ComputerName\$UserAccountName`" /AGTSVCACCOUNT=`"NT AUTHORITY\Network Service`" /SECURITYMODE=SQL /SAPWD=`"$SqlServiceAccountPassword`" /IACCEPTSQLSERVERLICENSETERMS";
     }
     @{
         isoUrl="https://sqlmigrationtraining.blob.core.windows.net/iso/enu_sql_server_2016_developer_edition_with_service_pack_3_x64_dvd.iso";
@@ -96,7 +90,7 @@ $sqlInstalls = @(
         databaseName="AdventureWorks2016";
         registryKey="HKLM:\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL13.SQL2016";
         sqlVersion="2016 SP3";
-        argumentList = "/qs /ACTION=INSTALL /FEATURES=SQL /INSTANCENAME=SQL2016 /SQLSVCACCOUNT=`"$ComputerName\$SqlServiceAccountName`" /SQLSVCPASSWORD=`"$SqlServiceAccountPassword`" /SQLSYSADMINACCOUNTS=`"$ComputerName\$UserAccountName`" /AGTSVCACCOUNT=`"NT AUTHORITY\Network Service`" /SQLSVCINSTANTFILEINIT=`"True`" /SECURITYMODE=SQL /SAPWD=`"$SqlServiceAccountPassword`" /IACCEPTSQLSERVERLICENSETERMS";
+        argumentList = "/q /ACTION=INSTALL /FEATURES=SQL /INSTANCENAME=SQL2016 /SQLSVCACCOUNT=`"$ComputerName\$SqlServiceAccountName`" /SQLSVCPASSWORD=`"$SqlServiceAccountPassword`" /SQLSYSADMINACCOUNTS=`"$ComputerName\$UserAccountName`" /AGTSVCACCOUNT=`"NT AUTHORITY\Network Service`" /SQLSVCINSTANTFILEINIT=`"True`" /SECURITYMODE=SQL /SAPWD=`"$SqlServiceAccountPassword`" /IACCEPTSQLSERVERLICENSETERMS";
     }
 )
 
@@ -104,7 +98,7 @@ $scriptPath = $MyInvocation.MyCommand.Path
 
 $action=New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-ExecutionPolicy Unrestricted -File `"$scriptPath`" -ComputerName `"$ComputerName`" -UserAccountName `"$UserAccountName`" -SqlServiceAccountName `"$SqlServiceAccountName`" -SqlServiceAccountPassword `"$SqlServiceAccountPassword`""
 $trigger=New-ScheduledTaskTrigger -AtStartup
-Register-ScheduledTask -Action $action -Trigger $trigger -TaskName "ReRunSQLInstallProcess" -Description "Re-Run the SQL Installation custom script to handle reboots and errors"
+Register-ScheduledTask -Action $action -Trigger $trigger -TaskName "ReRunSQLInstallProcess" -Description "Re-Run the SQL Installation custom script to handle reboots and errors" -User "NT AUTHORITY\LOCALSERVICE"
 
 # Adding this line prevents the progress rendering and MASSIVELY improves download times
 # Directly referenced from stackoverflow: https://superuser.com/a/693179
@@ -141,7 +135,7 @@ try {
     Log-Error("SSMS installation has encountered an error.")
     Log-Error($_)
     Log-Error("Terminating Script!")
-    Exit
+    Exit 1
 }
 
 #Check if the local user doesn't exist as per https://www.reddit.com/r/PowerShell/comments/fligk9/comment/fkytdup/?utm_source=share&utm_medium=web2x&context=3
@@ -158,7 +152,7 @@ if((Get-LocalUser $SqlServiceAccountName -ErrorAction SilentlyContinue) -eq $nul
         Log-Error("Could not create the SQL Service account user.")
         Log-Error($_)
         Log-Error("Terminating Script!")
-        Exit
+        Exit 1
     }
 }
 else {
@@ -180,7 +174,7 @@ catch {
     Log-Error("Could not add the SQL Service account user to the Administrators group.")
     Log-Error($_)
     Log-Error("Terminating Script!")
-    Exit
+    Exit 1
 }
 
 Log-Success("Local SQL Service account $SqlServiceAccountName exists and has valid permissions.")
@@ -212,7 +206,7 @@ foreach($sql in $sqlInstalls){
         Log-Error("ISO or Backup downloads have failed.")
         Log-Error($_)
         Log-Error("Terminating Script!")
-        Exit
+        Exit 1
     }
 
     try {
@@ -238,7 +232,7 @@ foreach($sql in $sqlInstalls){
         Log-Error("Mounting or extracting the ISO disk image $($sql.downloadPath) has failed.")
         Log-Error($_)
         Log-Error("Terminating Script!")
-        Exit
+        Exit 1
     }
 
     try {
@@ -262,7 +256,7 @@ foreach($sql in $sqlInstalls){
         Log-Error("SQL Server Installation for instance $($sql.instanceName) has failed.")
         Log-Error($_)
         Log-Error("Terminating Script!")
-        Exit
+        Exit 1
     }
     
     # We install 2019 first to allow make sure we have SQLCMD in an expected folder
@@ -296,7 +290,7 @@ foreach($sql in $sqlInstalls){
         Log-Error("SQL Database $($sql.databaseName) restoration has encountered an error.")
         Log-Error($_)
         Log-Error("Terminating Script!")
-        Exit
+        Exit 1
     }
 
     try {
@@ -325,7 +319,7 @@ foreach($sql in $sqlInstalls){
         Log-Error("Could not enable TCP/IP protocol for the instance $($sql.instanceName)")
         Log-Error($_)
         Log-Error("Terminating Script!")
-        Exit
+        Exit 1
     }
     $stepCounter++
 }
