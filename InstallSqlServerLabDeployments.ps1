@@ -21,17 +21,18 @@ function MakeDirectoryIfNotExists($DirectoryPath) {
 # across three concepts of info, infohighlight, and error. 
 # Just to make it a bit more frustrating though I am going to have one log function, that these three
 # functions call with a different parameter each.
-enum LogLevel {
+Enum LogLevel {
     info
     infohighlight
     error
 }
+
 function Log([LogLevel] $level, [string] $OutputText) {
     $TextColor = "White"
     switch($level) {
-        [LogLevel]::info {$TextColor = "White"}
-        [LogLevel]::infohighlight {$TextColor = "Cyan"}
-        [LogLevel]::error {$TextColor = "Red"}
+        info {$TextColor = "White"}
+        infohighlight {$TextColor = "Cyan"}
+        error {$TextColor = "Red"}
     }
     Write-Host $OutputText -ForegroundColor $TextColor
     $OutputText = [string][DateTime]::Now + " " + $OutputText
@@ -45,7 +46,7 @@ function Log-Info([string] $OutputText)
 
 function Log-InfoHighLight([string] $OutputText)
 {
-    Log([LogLevel]::infohightlight, $OutputText)
+    Log([LogLevel]::infohighlight, $OutputText)
 }
 
 function Log-Error([string] $OutputText)
