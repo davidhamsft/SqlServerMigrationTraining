@@ -23,6 +23,7 @@ param skuName string = 'GP_Gen5'
 
 @description('Enter number of vCores.')
 @allowed([
+  4
   8
   16
   24
@@ -31,7 +32,7 @@ param skuName string = 'GP_Gen5'
   64
   80
 ])
-param vCores int = 8
+param vCores int = 4
 
 @description('Enter storage size.')
 @minValue(32)
