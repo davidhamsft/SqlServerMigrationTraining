@@ -21,18 +21,36 @@ function MakeDirectoryIfNotExists($DirectoryPath) {
 # across three concepts of info, infohighlight, and error. 
 # Just to make it a bit more frustrating though I am going to have one log function, that these three
 # functions call with a different parameter each.
+# 
+# I need to add to the story of how difficult this was and the fact that I burned 2 hours of my day
+# converting this to a new method. Would you believe that in PowerShell if you try to use Enums
+# the most basic of types might I add, you have to call functions without parentheses? 
+#
+# See below to see how ridiculous it is, now though, we have one, absolutely, obviously, fantastically
+# managable function and an enum with loglevel types. We no longer have my sanity, dignity, or 
+# general ability to think straight. But at least we have a nice contained function.
+
 Enum LogLevel {
     info
     infohighlight
     error
 }
 
-function Log([LogLevel] $level, [string] $OutputText) {
+function Log {
+    param (
+        [Parameter(Mandatory=$true)]
+        [LogLevel]
+        $level,
+
+        [Parameter(Mandatory=$true)]
+        [string]
+        $OutputText
+    )
     $TextColor = "White"
     switch($level) {
-        info {$TextColor = "White"}
-        infohighlight {$TextColor = "Cyan"}
-        error {$TextColor = "Red"}
+        [LogLevel]::info {$TextColor = "White"}
+        [LogLevel]::infohighlight {$TextColor = "Cyan"}
+        [LogLevel]::error {$TextColor = "Red"}
     }
     Write-Host $OutputText -ForegroundColor $TextColor
     $OutputText = [string][DateTime]::Now + " " + $OutputText
@@ -41,17 +59,17 @@ function Log([LogLevel] $level, [string] $OutputText) {
 
 function Log-Info([string] $OutputText)
 {
-    Log([LogLevel]::info, $OutputText)
+    Log ([LogLevel]::info) $OutputText
 }
 
 function Log-InfoHighLight([string] $OutputText)
 {
-    Log([LogLevel]::infohighlight, $OutputText)
+    Log ([LogLevel]::infohighlight) $OutputText
 }
 
 function Log-Error([string] $OutputText)
 {
-    Log([LogLevel]::error, $OutputText)
+    Log ([LogLevel]::error) $OutputText
 }
 #endregion
 
