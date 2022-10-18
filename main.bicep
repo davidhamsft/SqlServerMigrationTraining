@@ -4,7 +4,87 @@ targetScope = 'subscription'
 param rgName string = 'SQLMigrationLab'
 
 @description('Choose a location')
-@allowed(loadJsonContent('azure-bicep-locations/locations.json', '$.[*].name'))
+@allowed([
+  'eastus'
+  'eastus2'
+  'southcentralus'
+  'westus2'
+  'westus3'
+  'australiaeast'
+  'southeastasia'
+  'northeurope'
+  'swedencentral'
+  'uksouth'
+  'westeurope'
+  'centralus'
+  'southafricanorth'
+  'centralindia'
+  'eastasia'
+  'japaneast'
+  'koreacentral'
+  'canadacentral'
+  'francecentral'
+  'germanywestcentral'
+  'norwayeast'
+  'switzerlandnorth'
+  'uaenorth'
+  'brazilsouth'
+  'eastus2euap'
+  'qatarcentral'
+  'centralusstage'
+  'eastusstage'
+  'eastus2stage'
+  'northcentralusstage'
+  'southcentralusstage'
+  'westusstage'
+  'westus2stage'
+  'asia'
+  'asiapacific'
+  'australia'
+  'brazil'
+  'canada'
+  'europe'
+  'france'
+  'germany'
+  'global'
+  'india'
+  'japan'
+  'korea'
+  'norway'
+  'singapore'
+  'southafrica'
+  'switzerland'
+  'uae'
+  'uk'
+  'unitedstates'
+  'unitedstateseuap'
+  'eastasiastage'
+  'southeastasiastage'
+  'eastusstg'
+  'southcentralusstg'
+  'northcentralus'
+  'westus'
+  'jioindiawest'
+  'centraluseuap'
+  'westcentralus'
+  'southafricawest'
+  'australiacentral'
+  'australiacentral2'
+  'australiasoutheast'
+  'japanwest'
+  'jioindiacentral'
+  'koreasouth'
+  'southindia'
+  'westindia'
+  'canadaeast'
+  'francesouth'
+  'germanynorth'
+  'norwaywest'
+  'switzerlandwest'
+  'ukwest'
+  'uaecentral'
+  'brazilsoutheast'
+])
 param location string
 
 @description('Enter SQL Migration Lab VM Name.')
@@ -61,6 +141,7 @@ param skuName string = 'GP_Gen5'
 
 @description('Enter number of vCores.')
 @allowed([
+  4
   8
   16
   24
@@ -69,7 +150,7 @@ param skuName string = 'GP_Gen5'
   64
   80
 ])
-param vCores int = 16
+param vCores int = 4
 
 @description('Enter storage size.')
 @minValue(32)
@@ -88,29 +169,73 @@ resource rg 'Microsoft.Resources/resourceGroups@2021-04-01' = {
   location: location
 }
 
-module lab 'lab.bicep' = {
-  name: 'labDeployment'
+module network 'network.bicep' = {
+  name: 'labNetworkDeployment'
   scope: rg
   params: {
-    vmName: vmName
-    vmSize: vmSize
     location: location
-    managedInstanceName: managedInstanceName
-    sqlDBServerName: sqlDBServerName
-    sqlDBDatabaseName: sqlDBDatabaseName
-    administratorLogin: administratorLogin
-    administratorLoginPassword: administratorLoginPassword
     virtualNetworkName: virtualNetworkName
     addressPrefix: addressPrefix
-    bastionHostName: bastionHostName
     bastionSubnetIpPrefix: bastionSubnetIpPrefix
     sqlMiSubnetName: sqlMiSubnetName
     sqlMiSubnetPrefix: sqlMiSubnetPrefix
     vmSubnetName: vmSubnetName
     vmSubnetPrefix: vmSubnetPrefix
+    bastionHostName: bastionHostName
+  }
+}
+
+module labvm 'labvm.bicep' = {
+  name: 'labVmDeployment'
+  scope: rg
+  params: {
+    vmName: vmName
+    vmSize: vmSize
+    location: location
+    administratorLogin: administratorLogin
+    administratorLoginPassword: administratorLoginPassword
+    vmSubnetName: vmSubnetName
+  }
+  dependsOn: [
+    network
+  ]
+}
+
+module sqldb 'sqldb.bicep' = {
+  name: 'sqlDbDeployment'
+  scope: rg
+  params: {
+    location: location
+    sqlDBServerName: sqlDBServerName
+    sqlDBDatabaseName: sqlDBDatabaseName
+    administratorLogin: administratorLogin
+    administratorLoginPassword: administratorLoginPassword
+  }
+}
+
+module dbmi 'dbmi.bicep' = {
+  name: 'dbmiDeployment'
+  scope: rg
+  params: {
+    location: location
+    managedInstanceName: managedInstanceName
+    administratorLogin: administratorLogin
+    administratorLoginPassword: administratorLoginPassword
+    sqlMiSubnetName: sqlMiSubnetName
     skuName: skuName
     vCores: vCores
     storageSizeInGB: storageSizeInGB
     licenseType: licenseType
+  }
+  dependsOn: [
+    network
+  ]
+}
+
+module storage 'storage.bicep' = {
+  name: 'storageAccountDeployment'
+  scope: rg
+  params: {
+    location: location
   }
 }

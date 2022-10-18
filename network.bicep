@@ -1,36 +1,11 @@
-@description('Enter SQL Migration Lab VM Name.')
-param vmName string
-
 @description('Location for all resources.')
 param location string = resourceGroup().location
-
-@description('Default VM Size')
-param vmSize string = 'Standard_D2_v3'
-
-@description('Enter managed instance name.')
-param managedInstanceName string
-
-@description('Enter the SQL DB Logical Server name.')
-param sqlDBServerName string
-
-@description('Enter the SQL DB Database name.')
-param sqlDBDatabaseName string
-
-@description('Enter user name, this will be your VM Login, SQL DB Admin, and SQL MI Admin')
-param administratorLogin string
-
-@description('Enter password, this will be your VM Password, SQL DB Admin Password, SQL MI Admin Password, and sa Password')
-@secure()
-param administratorLoginPassword string
 
 @description('Enter virtual network name. If you leave this field blank name will be created by the template.')
 param virtualNetworkName string = 'SQLMigrationLab-vNet'
 
 @description('Enter virtual network address prefix.')
 param addressPrefix string = '10.217.0.0/16'
-
-@description('Enter the Bastion host name.')
-param bastionHostName string
 
 @description('Bastion subnet IP prefix MUST be within vnet IP prefix address space')
 param bastionSubnetIpPrefix string = '10.217.2.0/24'
@@ -47,47 +22,14 @@ param vmSubnetName string = 'VMSubnet'
 @description('Enter subnet address prefix.')
 param vmSubnetPrefix string = '10.217.3.0/24'
 
-@description('Enter sku name.')
-@allowed([
-  'GP_Gen5'
-])
-param skuName string = 'GP_Gen5'
+@description('Enter the Bastion host name.')
+param bastionHostName string
 
-@description('Enter number of vCores.')
-@allowed([
-  8
-  16
-  24
-  32
-  40
-  64
-  80
-])
-param vCores int = 16
+var networkSecurityGroupName = 'SQLMI-SqlLab-NSG'
+var routeTableName = 'SQLMI-SqlLab-Route-Table'
 
-@description('Enter storage size.')
-@minValue(32)
-@maxValue(8192)
-param storageSizeInGB int = 256
-
-@description('Enter license type.')
-@allowed([
-  'BasePrice'
-  'LicenseIncluded'
-])
-param licenseType string = 'LicenseIncluded'
-
-var bastionPublicIpAddressName = '${bastionHostName}-pip'
 var bastionSubnetName = 'AzureBastionSubnet'
-
-var networkSecurityGroupName = 'SQLMI-${managedInstanceName}-NSG'
-var routeTableName = 'SQLMI-${managedInstanceName}-Route-Table'
-
-var nicName = '${vmName}-NIC'
-var labDeploymentScriptUri = 'https://raw.githubusercontent.com/cbattlegear/SqlServerMigrationTraining/master/InstallSqlServerLabDeployments.ps1'
-var deploymentParameters = '-ComputerName "${vmName}" -UserAccountName "${administratorLogin}" -SqlServiceAccountName "sqlService" -SqlServiceAccountPassword "${administratorLoginPassword}"'
-
-var storageAccountName = 'store${uniqueString(resourceGroup().id)}'
+var bastionPublicIpAddressName = '${bastionHostName}-pip'
 
 resource networkSecurityGroup 'Microsoft.Network/networkSecurityGroups@2021-08-01' = {
   name: networkSecurityGroupName
@@ -241,128 +183,4 @@ resource bastionHost 'Microsoft.Network/bastionHosts@2022-01-01' = {
       }
     ]
   }
-}
-
-resource managedInstance 'Microsoft.Sql/managedInstances@2021-11-01-preview' = {
-  name: managedInstanceName
-  location: location
-  sku: {
-    name: skuName
-  }
-  identity: {
-    type: 'SystemAssigned'
-  }
-  dependsOn: [
-    virtualNetwork
-  ]
-  properties: {
-    administratorLogin: administratorLogin
-    administratorLoginPassword: administratorLoginPassword
-    subnetId: resourceId('Microsoft.Network/virtualNetworks/subnets', virtualNetworkName, sqlMiSubnetName)
-    storageSizeInGB: storageSizeInGB
-    vCores: vCores
-    licenseType: licenseType
-  }
-}
-
-resource sqlServer 'Microsoft.Sql/servers@2021-08-01-preview' = {
-  name: sqlDBServerName
-  location: location
-  properties: {
-    administratorLogin: administratorLogin
-    administratorLoginPassword: administratorLoginPassword
-  }
-}
-
-resource sqlDB 'Microsoft.Sql/servers/databases@2021-08-01-preview' = {
-  parent: sqlServer
-  name: sqlDBDatabaseName
-  location: location
-  sku: {
-    name: 'GP_Gen5'
-    tier: 'GeneralPurpose'
-    capacity: 2
-  }
-}
-
-resource nic 'Microsoft.Network/networkInterfaces@2020-08-01' = {
-  name: nicName
-  location: location
-  properties: {
-    ipConfigurations: [
-      {
-        name: 'ipconfig1'
-        properties: {
-          privateIPAllocationMethod: 'Dynamic'
-          subnet: {
-            id: resourceId('Microsoft.Network/virtualNetworks/subnets', virtualNetworkName, vmSubnetName)
-          }
-        }
-      }
-    ]
-  }
-  dependsOn: [
-    virtualNetwork
-  ]
-}
-
-resource labVm 'Microsoft.Compute/virtualMachines@2020-12-01' = {
-  name: vmName
-  location: location
-  properties: {
-    hardwareProfile: {
-      vmSize: vmSize
-    }
-    osProfile: {
-      computerName: vmName
-      adminUsername: administratorLogin
-      adminPassword: administratorLoginPassword
-    }
-    storageProfile: {
-      imageReference: {
-        publisher: 'MicrosoftWindowsServer'
-        offer: 'WindowsServer'
-        sku: '2019-Datacenter'
-        version: 'latest'
-      }
-      osDisk: {
-        createOption: 'FromImage'
-      }
-    }
-    networkProfile: {
-      networkInterfaces: [
-        {
-          id: nic.id
-        }
-      ]
-    }
-  }
-}
-
-resource labVm_CustomScriptExtension 'Microsoft.Compute/virtualMachines/extensions@2020-12-01' = {
-  parent: labVm
-  name: 'CustomScriptExtension'
-  location: location
-  properties: {
-    publisher: 'Microsoft.Compute'
-    type: 'CustomScriptExtension'
-    typeHandlerVersion: '1.8'
-    autoUpgradeMinorVersion: true
-    protectedSettings: {
-      fileUris: [
-        labDeploymentScriptUri
-      ]
-      commandToExecute: 'powershell -ExecutionPolicy Unrestricted -File InstallSqlServerLabDeployments.ps1 ${deploymentParameters}'
-    }
-  }
-}
-
-resource sa 'Microsoft.Storage/storageAccounts@2021-06-01' = {
-  name: storageAccountName
-  location: location
-  sku: {
-    name: 'Standard_LRS'
-  }
-  kind: 'StorageV2'
-  properties: {}
 }
