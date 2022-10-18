@@ -33,6 +33,7 @@ function MakeDirectoryIfNotExists($DirectoryPath) {
 Enum LogLevel {
     info
     infohighlight
+    success
     error
 }
 
@@ -51,6 +52,7 @@ function Log {
         [LogLevel]::info {$TextColor = "White"}
         [LogLevel]::infohighlight {$TextColor = "Cyan"}
         [LogLevel]::error {$TextColor = "Red"}
+        [LogLevel]::success {$TextColor = "Green"}
     }
     Write-Host $OutputText -ForegroundColor $TextColor
     $OutputText = [string][DateTime]::Now + " " + $OutputText
@@ -65,6 +67,11 @@ function Log-Info([string] $OutputText)
 function Log-InfoHighLight([string] $OutputText)
 {
     Log ([LogLevel]::infohighlight) $OutputText
+}
+
+function Log-Success([string] $OutputText)
+{
+    Log ([LogLevel]::success) $OutputText
 }
 
 function Log-Error([string] $OutputText)
