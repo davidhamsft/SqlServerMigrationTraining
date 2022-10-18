@@ -91,7 +91,7 @@ param location string
 param vmName string
 
 @description('Default VM Size')
-param vmSize string = 'Standard_D2_v3'
+param vmSize string = 'Standard_E8s_v4'
 
 @description('Enter managed instance name.')
 param managedInstanceName string

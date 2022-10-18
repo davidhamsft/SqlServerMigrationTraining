@@ -5,7 +5,7 @@ param location string = resourceGroup().location
 param vmName string
 
 @description('Default VM Size')
-param vmSize string = 'Standard_D2_v3'
+param vmSize string = 'Standard_E8s_v4'
 
 @description('Enter user name, this will be your VM Login, SQL DB Admin, and SQL MI Admin')
 param administratorLogin string
