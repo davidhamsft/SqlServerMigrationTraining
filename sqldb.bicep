@@ -12,6 +12,7 @@ param administratorLogin string
 
 @description('Enter password, this will be your VM Password, SQL DB Admin Password, SQL MI Admin Password, and sa Password')
 @secure()
+@minLength(12)
 param administratorLoginPassword string
 
 resource sqlServer 'Microsoft.Sql/servers@2021-08-01-preview' = {

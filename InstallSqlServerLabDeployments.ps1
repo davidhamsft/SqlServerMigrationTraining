@@ -14,6 +14,14 @@ function MakeDirectoryIfNotExists($DirectoryPath) {
     }
 }
 
+# IE ESC Disable script from https://serverspace.io/support/help/disable-enhanced-security-windows-server/
+function Disable-IEESC {
+    $AdminKey = "HKLM:\SOFTWARE\Microsoft\Active Setup\Installed Components\{A509B1A7-37EF-4b3f-8CFC-4F3A74704073}"
+    $UserKey = "HKLM:\SOFTWARE\Microsoft\Active Setup\Installed Components\{A509B1A8-37EF-4b3f-8CFC-4F3A74704073}"
+    Set-ItemProperty -Path $AdminKey -Name "IsInstalled" -Value 0
+    Set-ItemProperty -Path $UserKey -Name "IsInstalled" -Value 0 
+}
+
 #region - These routines writes the output string to the console and also to the log file.
 # Originally taken from AzureMigration.ps1, now heavily modified due to Nick's need to complain
 # about the code being formatted a specific way instead of looking at the functionality of the 
@@ -92,6 +100,8 @@ $sqlInstalls = @(
         databaseName="AdventureWorks2019";
         registryKey="HKLM:\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL15.SQL2019";
         sqlVersion="2019";
+        sqlVersionInstallString="MSSQL15";
+        sqlRestoreFileNamePrefix="AdventureWorks2017";
         argumentList = "/q /ACTION=INSTALL /FEATURES=SQL /INSTANCENAME=SQL2019 /SQLSVCACCOUNT=`"$ComputerName\$SqlServiceAccountName`" /SQLSVCPASSWORD=`"$SqlServiceAccountPassword`" /SQLSYSADMINACCOUNTS=`"$ComputerName\$UserAccountName`" /AGTSVCACCOUNT=`"NT AUTHORITY\Network Service`" /SQLSVCINSTANTFILEINIT=`"True`" /SECURITYMODE=SQL /SAPWD=`"$SqlServiceAccountPassword`" /IACCEPTSQLSERVERLICENSETERMS";
     }
     @{
@@ -104,6 +114,8 @@ $sqlInstalls = @(
         databaseName="AdventureWorks2012";
         registryKey="HKLM:\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL11.SQL2012";
         sqlVersion="2012 SP4";
+        sqlVersionInstallString="MSSQL11";
+        sqlRestoreFileNamePrefix="AdventureWorks2012";
         argumentList = "/q /ACTION=INSTALL /FEATURES=SQL /INSTANCENAME=SQL2012 /SQLSVCACCOUNT=`"$ComputerName\$SqlServiceAccountName`" /SQLSVCPASSWORD=`"$SqlServiceAccountPassword`" /SQLSYSADMINACCOUNTS=`"$ComputerName\$UserAccountName`" /AGTSVCACCOUNT=`"NT AUTHORITY\Network Service`" /SECURITYMODE=SQL /SAPWD=`"$SqlServiceAccountPassword`" /IACCEPTSQLSERVERLICENSETERMS";
     }
     @{
@@ -116,6 +128,8 @@ $sqlInstalls = @(
         databaseName="AdventureWorks2016";
         registryKey="HKLM:\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL13.SQL2016";
         sqlVersion="2016 SP3";
+        sqlVersionInstallString="MSSQL13";
+        sqlRestoreFileNamePrefix="AdventureWorks2016";
         argumentList = "/q /ACTION=INSTALL /FEATURES=SQL /INSTANCENAME=SQL2016 /SQLSVCACCOUNT=`"$ComputerName\$SqlServiceAccountName`" /SQLSVCPASSWORD=`"$SqlServiceAccountPassword`" /SQLSYSADMINACCOUNTS=`"$ComputerName\$UserAccountName`" /AGTSVCACCOUNT=`"NT AUTHORITY\Network Service`" /SQLSVCINSTANTFILEINIT=`"True`" /SECURITYMODE=SQL /SAPWD=`"$SqlServiceAccountPassword`" /IACCEPTSQLSERVERLICENSETERMS";
     }
 )
@@ -305,7 +319,7 @@ foreach($sql in $sqlInstalls){
 
         if($Rows -eq 0) {
             Log-Info("Starting restoration of $($sql.databaseName) on instance.")
-            $SqlCmdArguments = "-S $ComputerName\$($sql.instanceName) -U sa -P $SqlServiceAccountPassword -Q `"RESTORE DATABASE [$($sql.databaseName)] FROM DISK='$($sql.backupPath)'`""
+            $SqlCmdArguments = "-S $ComputerName\$($sql.instanceName) -U sa -P $SqlServiceAccountPassword -Q `"RESTORE DATABASE [$($sql.databaseName)] FROM DISK='$($sql.backupPath)' WITH FILE = 1, MOVE N'$($sql.sqlRestoreFileNamePrefix)' TO N'C:\Program Files\Microsoft SQL Server\$($sql.sqlVersionInstallString).$($sql.instanceName)\MSSQL\DATA\$($sql.databaseName).mdf', MOVE N'$($sql.sqlRestoreFileNamePrefix)_log' TO N'C:\Program Files\Microsoft SQL Server\$($sql.sqlVersionInstallString).$($sql.instanceName)\MSSQL\DATA\$($sql.databaseName)_log.ldf',  NOUNLOAD,  STATS = 5`""
             Start-Process -FilePath "C:\Program Files\Microsoft SQL Server\Client SDK\ODBC\170\Tools\Binn\SQLCMD.EXE" -ArgumentList $SqlCmdArguments -Wait
             Log-Success("Database $($sql.databaseName) successfully restored on instance.")
         } else {
@@ -349,5 +363,9 @@ foreach($sql in $sqlInstalls){
     }
     $stepCounter++
 }
+
+Log-InfoHighLight("Step ${stepCounter}: General Cleanup!")
+Disable-IEESC
+& dism /online /norestart /Remove-Capability /CapabilityName:Browser.InternetExplorer~~~~0.0.11.0
 
 Unregister-ScheduledTask -TaskName "ReRunSQLInstallProcess" -Confirm:$false

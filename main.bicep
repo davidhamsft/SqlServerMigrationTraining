@@ -107,6 +107,7 @@ param administratorLogin string
 
 @description('Enter password, this will be your VM Password, SQL DB Admin Password, SQL MI Admin Password, and sa Password')
 @secure()
+@minLength(16)
 param administratorLoginPassword string
 
 @description('Enter virtual network name. If you leave this field blank name will be created by the template.')
