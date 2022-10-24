@@ -100,8 +100,7 @@ $sqlInstalls = @(
         databaseName="AdventureWorks2019";
         registryKey="HKLM:\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL15.SQL2019";
         sqlVersion="2019";
-        sqlVersionInstallString="MSSQL15";
-        sqlRestoreFileNamePrefix="AdventureWorks2017";
+        sqlRestoreArguments="-S $ComputerName\SQL2019 -U sa -P $SqlServiceAccountPassword -Q `"RESTORE DATABASE [AdventureWorks2019] FROM DISK='C:\Backups\AdventureWorks2019.bak' WITH FILE = 1, MOVE N'AdventureWorks2017' TO N'C:\Program Files\Microsoft SQL Server\MSSQL15.SQL2019\MSSQL\DATA\AdventureWorks2019.mdf', MOVE N'AdventureWorks2017_log' TO N'C:\Program Files\Microsoft SQL Server\MSSQL15.SQL2019\MSSQL\DATA\AdventureWorks2019_log.ldf',  NOUNLOAD,  STATS = 5`"";
         argumentList = "/q /ACTION=INSTALL /FEATURES=SQL /INSTANCENAME=SQL2019 /SQLSVCACCOUNT=`"$ComputerName\$SqlServiceAccountName`" /SQLSVCPASSWORD=`"$SqlServiceAccountPassword`" /SQLSYSADMINACCOUNTS=`"$ComputerName\$UserAccountName`" /AGTSVCACCOUNT=`"NT AUTHORITY\Network Service`" /SQLSVCINSTANTFILEINIT=`"True`" /SECURITYMODE=SQL /SAPWD=`"$SqlServiceAccountPassword`" /IACCEPTSQLSERVERLICENSETERMS";
     }
     @{
@@ -114,8 +113,7 @@ $sqlInstalls = @(
         databaseName="AdventureWorks2012";
         registryKey="HKLM:\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL11.SQL2012";
         sqlVersion="2012 SP4";
-        sqlVersionInstallString="MSSQL11";
-        sqlRestoreFileNamePrefix="AdventureWorks2012";
+        sqlRestoreArguments="-S $ComputerName\SQL2012 -U sa -P $SqlServiceAccountPassword -Q `"RESTORE DATABASE [AdventureWorks2012] FROM DISK='C:\Backups\AdventureWorks2012.bak' WITH FILE = 1, MOVE N'AdventureWorks2012' TO N'C:\Program Files\Microsoft SQL Server\MSSQL11.SQL2012\MSSQL\DATA\AdventureWorks2012.mdf', MOVE N'AdventureWorks2012_log' TO N'C:\Program Files\Microsoft SQL Server\MSSQL11.SQL2012\MSSQL\DATA\AdventureWorks2012_log.ldf',  NOUNLOAD,  STATS = 5`"";
         argumentList = "/q /ACTION=INSTALL /FEATURES=SQL /INSTANCENAME=SQL2012 /SQLSVCACCOUNT=`"$ComputerName\$SqlServiceAccountName`" /SQLSVCPASSWORD=`"$SqlServiceAccountPassword`" /SQLSYSADMINACCOUNTS=`"$ComputerName\$UserAccountName`" /AGTSVCACCOUNT=`"NT AUTHORITY\Network Service`" /SECURITYMODE=SQL /SAPWD=`"$SqlServiceAccountPassword`" /IACCEPTSQLSERVERLICENSETERMS";
     }
     @{
@@ -128,8 +126,7 @@ $sqlInstalls = @(
         databaseName="AdventureWorks2016";
         registryKey="HKLM:\SOFTWARE\Microsoft\Microsoft SQL Server\MSSQL13.SQL2016";
         sqlVersion="2016 SP3";
-        sqlVersionInstallString="MSSQL13";
-        sqlRestoreFileNamePrefix="AdventureWorks2016";
+        sqlRestoreArguments="-S $ComputerName\SQL2016 -U sa -P $SqlServiceAccountPassword -Q `"RESTORE DATABASE [AdventureWorks2016] FROM DISK='C:\Backups\AdventureWorks2016.bak' WITH FILE = 1, MOVE N'AdventureWorks2016_Data' TO N'C:\Program Files\Microsoft SQL Server\MSSQL13.SQL2016\MSSQL\DATA\AdventureWorks2016_Data.mdf', MOVE N'AdventureWorks2016_log' TO N'C:\Program Files\Microsoft SQL Server\MSSQL13.SQL2016\MSSQL\DATA\AdventureWorks2016_log.ldf',  NOUNLOAD,  STATS = 5`"";
         argumentList = "/q /ACTION=INSTALL /FEATURES=SQL /INSTANCENAME=SQL2016 /SQLSVCACCOUNT=`"$ComputerName\$SqlServiceAccountName`" /SQLSVCPASSWORD=`"$SqlServiceAccountPassword`" /SQLSYSADMINACCOUNTS=`"$ComputerName\$UserAccountName`" /AGTSVCACCOUNT=`"NT AUTHORITY\Network Service`" /SQLSVCINSTANTFILEINIT=`"True`" /SECURITYMODE=SQL /SAPWD=`"$SqlServiceAccountPassword`" /IACCEPTSQLSERVERLICENSETERMS";
     }
 )
@@ -319,8 +316,7 @@ foreach($sql in $sqlInstalls){
 
         if($Rows -eq 0) {
             Log-Info("Starting restoration of $($sql.databaseName) on instance.")
-            $SqlCmdArguments = "-S $ComputerName\$($sql.instanceName) -U sa -P $SqlServiceAccountPassword -Q `"RESTORE DATABASE [$($sql.databaseName)] FROM DISK='$($sql.backupPath)' WITH FILE = 1, MOVE N'$($sql.sqlRestoreFileNamePrefix)' TO N'C:\Program Files\Microsoft SQL Server\$($sql.sqlVersionInstallString).$($sql.instanceName)\MSSQL\DATA\$($sql.databaseName).mdf', MOVE N'$($sql.sqlRestoreFileNamePrefix)_log' TO N'C:\Program Files\Microsoft SQL Server\$($sql.sqlVersionInstallString).$($sql.instanceName)\MSSQL\DATA\$($sql.databaseName)_log.ldf',  NOUNLOAD,  STATS = 5`""
-            Start-Process -FilePath "C:\Program Files\Microsoft SQL Server\Client SDK\ODBC\170\Tools\Binn\SQLCMD.EXE" -ArgumentList $SqlCmdArguments -Wait
+            Start-Process -FilePath "C:\Program Files\Microsoft SQL Server\Client SDK\ODBC\170\Tools\Binn\SQLCMD.EXE" -ArgumentList $sql.sqlRestoreArguments -Wait
             Log-Success("Database $($sql.databaseName) successfully restored on instance.")
         } else {
             Log-Info("Database $($sql.databaseName) already exists on instance.")
