@@ -88,6 +88,8 @@ param rgName string = 'SQLMigrationLab'
 param location string
 
 @description('Enter SQL Migration Lab VM Name.')
+@minLength(4)
+@maxLength(15)
 param vmName string
 
 @description('Default VM Size')
