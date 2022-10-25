@@ -8,9 +8,10 @@
 
 **During the "hands-on" attendees will focus on:**
 1. Performing SQL Server migration assessments on existing SQL Server (2012, 2016, and 2019) prior to migration. 
-2. 
+2. Addressing any SQL Server assessment compatibility or feature parity issues prior to migration. 
+3. Migrating SQL Server to PaaS Azure SQL (SQL DB and SQL MI) in offline and online mode with Microsoft migration tools (URL backup/restore, Azure Data Migration Assistant (DMA), Azure Data Migration Service (DMS), Azure Data Studio). 
 
-**By the end of the hands-on, attendees**
+**By the end of the hands-on, attendees** will have learned the fundamentals of migrating SQL Server to PaaS Azure SQL in offline and online modes with their respective Microsoft migration tooling. 
 
 ### Technologies
 
@@ -51,3 +52,9 @@
 
 ## Training 
       
+Objectives:
+1. SQL Server 2016 => Offline migration - Backup to URL (TSQL) and restore with URL to Azure SQL MI (TSQL).
+2. SQL Server 2019 => Online migration - Azure Data Studio migration to Azure SQL MI.
+3. SQL Server 2012 => Offline migration - Microsoft Data Migration Assistant (DMA) migration to Azure SQL DB.
+
+
