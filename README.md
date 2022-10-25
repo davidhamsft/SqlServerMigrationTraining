@@ -1,4 +1,4 @@
-# Hand-On Training - SQL Migration to Azure SQL DB and Azure SQL Managed Instance (Online and Offline)
+# Hand-On Training: SQL Migration to Azure SQL DB and Azure SQL Managed Instance (Online and Offline)
 
 ## Overview 
 
