@@ -11,9 +11,9 @@
 2. Addressing any SQL Server assessment compatibility or feature parity issues prior to migration. 
 3. Migrating SQL Server to PaaS Azure SQL (SQL DB and SQL MI) in offline and online mode with Microsoft migration tools (URL backup/restore, Azure Data Migration Assistant (DMA), Azure Data Migration Service (DMS), Azure Data Studio). 
 
-**By the end of the hands-on, attendees** will have learned the fundamentals of migrating SQL Server to PaaS Azure SQL in offline and online modes with their respective Microsoft migration tooling. 
+**By the end of the hands-on, attendees** will have learned the fundamentals of migrating SQL Server to PaaS Azure SQL in offline and online mode with their respective Microsoft migration tool. 
 
-### Technologies
+## Technologies
 
 [SQL Server 2012](https://learn.microsoft.com/en-us/previous-versions/sql/sql-server-2012/ms130214(v=sql.110)),
 [SQL Server 2016](https://learn.microsoft.com/en-us/sql/sql-server/?view=sql-server-2016), 
@@ -30,7 +30,7 @@
 [Azure Storage](https://learn.microsoft.com/en-us/azure/storage/), 
 [SQL Server Management Studio (SSMS)](https://learn.microsoft.com/en-us/sql/ssms/sql-server-management-studio-ssms?view=sql-server-ver16) 
 
-### Prerequisites: 
+## Prerequisites: 
 1. Deploy training resources in Azure Subscription.
     - Open Cloud Shell
     - Git clone Bicep files: `git clone https://github.com/cbattlegear/SqlServerMigrationTraining.git`
@@ -49,6 +49,13 @@
           - SQL Server Management Studio
           - Azure Data Studio 
           - Data Migration Assistant - ***Note:*** Download and install. 
+          
+ 3. Supporting documents: 
+    - [TSQL - SQL backup and restore to Azure Blob Storage](https://learn.microsoft.com/en-us/sql/relational-databases/tutorial-sql-server-backup-and-restore-to-azure-blob-storage-service?view=sql-server-ver16&tabs=SSMS)
+    - [TSQL - Create SQL Server credentials for authentication to Azure Blob Storage](https://learn.microsoft.com/en-us/sql/relational-databases/backup-restore/sql-server-backup-to-url?view=sql-server-ver16#credential)
+    - [Migrate SQL Server to Azure SQL MI online using Azure Data Studio with DMS](https://learn.microsoft.com/en-us/azure/dms/tutorial-sql-server-managed-instance-online-ads)
+    - [Migrate SQL Server to Azure SQL DB using Data Migration Assistant (DMA)](https://learn.microsoft.com/en-us/sql/dma/dma-migrateonpremsqltosqldb?view=sql-server-ver16)
+   
 
 ## Training 
       
@@ -58,3 +65,4 @@ Objectives:
 3. SQL Server 2012 => Offline migration - Microsoft Data Migration Assistant (DMA) migration to Azure SQL DB.
 
 
+PENDING STEPS ... Will be provided day of training 
