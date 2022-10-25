@@ -2,7 +2,7 @@
 1. Deploy training resources in Azure Subscription:
     - Open Cloud Shell
     - Git clone Bicep files: `git clone https://github.com/cbattlegear/SqlServerMigrationTraining.git`
-    - Go into directory: `cd SQLMigrationTraining/`
+    - Go into directory: `cd SqlServerMigrationTraining/`
     - Execute main.bicep: `az deployment sub create --location eastus2 --template-file main.bicep`
     - Walk through on-screen instructions. ***Note:***  Resource Goup Name is SQLMigrationLab by default. For resource names, use all lowercase and avoid underscored and dashes. For password, 16 chars, upper, lower, number.
 
