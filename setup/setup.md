@@ -8,12 +8,12 @@
 
       ***Deployment will take ~3 hours due to Azure SQL MI provisioning.***
  2. Verify environment deployment.
-    
+    ![Bastion Layout Diagram of the Deployed resources in the template](./images/biceplayout.png)
     - Deployed resource group should contain the following: 
         - Azure Bastion 
         - Azure Disk (attached to VM)
         - Azure Network Interface
-        - Azure Network Security Group (3 of them)
+        - Azure Network Security Group (1 of them)
         - Azure Public IP Address (For Bastion)
         - Azure Route Table (For SQL MI)
         - Azure Storage Account
@@ -24,7 +24,7 @@
         - Azure Virtual Cluster (For SQL MI)
         - Azure Virtual Machine (same as Azure SQL VM)
         - Azure VNET
- 
+
     - Bastion into VM in the deployed resource group.
       - Verify the following is installed: 
           - SQL Server 2012 - AdventureWorks2012
