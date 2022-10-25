@@ -1,12 +1,14 @@
-# Hand-On Training - SQL Migration (Online and Offline)
+# Hand-On Training - SQL Migration to Azure SQL DB and Azure SQL Managed Instance (Online and Offline)
 
 ## Overview 
 
-**This hands-on training enables attendees to** learn how to use
+**This hands-on training enables attendees to** learn how to use Microsoft tooling for online and offline SQL Server Migrations to PaaS Azure SQL (SQL DB and SQL Managed Instance).
 
-**This hand-on simulates a real-worl scenario**
+**This hand-on training simulates a real-world scenario** where Database Administrators need to migrate SQL Servers (on-premises or Azure SQL VMs) to PaaS Azure SQL (SQL DB and SQL Managed Instance), while taking advantage of Microsoft migration tools and services. 
 
 **During the "hands-on" attendees will focus on:**
+1. Performing SQL Server migration assessments on existing SQL Server (2012, 2016, and 2019) prior to migration. 
+2. 
 
 **By the end of the hands-on, attendees**
 
@@ -37,6 +39,7 @@
 
       ***Deployment will take ~3 hours due to Azure SQL MI provisioning.***
  2. Verify environment deployment.
+ 
     - Bastion into VM in the deployed resource group.
       - Verify the following is installed: 
           - SQL Server 2012 - AdventureWorks2012
@@ -45,4 +48,6 @@
           - SQL Server Management Studio
           - Azure Data Studio 
           - Data Migration Assistant - ***Note:*** Download and install. 
+
+## Training 
       
